@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Text;
 using IndexFileNameFilter = Lucene.Net.Index.IndexFileNameFilter;
 using Lucene.Net;
@@ -144,10 +145,19 @@ namespace Lucene.Net.Store.Azure
 
         #region DIRECTORY METHODS
         /// <summary>Returns an array of strings, one for each file in the directory. </summary>
-        public override System.String[] ListAll()
-        {
-            var results = from blob in _blobContainer.ListBlobs()
-                          select blob.Uri.AbsolutePath.Substring(blob.Uri.AbsolutePath.LastIndexOf('/') + 1);
+        public override System.String[] ListAll() {
+            var key = "list";
+            IEnumerable<string> results;
+            if (!MemoryCache.Default.Contains(key)) {
+                results =
+                    (from blob in _blobContainer.ListBlobs()
+                    select blob.Uri.AbsolutePath.Substring(blob.Uri.AbsolutePath.LastIndexOf('/') + 1))
+                    .ToArray();
+
+                MemoryCache.Default.Add(key, results, DateTime.Now.AddMinutes(1));
+            }
+            
+            results = MemoryCache.Default.Get(key) as IEnumerable<string>;
             return results.ToArray<string>();
         }
 
@@ -258,13 +268,24 @@ namespace Lucene.Net.Store.Azure
             return new AzureIndexOutput(this, blob);
         }
 
+        private const string KeyPattern = @"blob_key_{0}";
+
         /// <summary>Returns a stream reading an existing file. </summary>
-        public override IndexInput OpenInput(System.String name)
-        {
+        public override IndexInput OpenInput(System.String name) {
+            var cache = MemoryCache.Default;
             try
             {
-                var blob = _blobContainer.GetBlockBlobReference(name);
-                blob.FetchAttributes();
+                CloudBlockBlob blob;
+                var key = string.Format(KeyPattern, name);
+                if (cache.Contains(key)) {
+                    blob = cache.Get(key) as CloudBlockBlob;
+                }
+                else
+                {
+                    blob = _blobContainer.GetBlockBlobReference(name);
+                    blob.FetchAttributes();
+                    cache.Set(key, blob, DateTime.Now.AddMinutes(5));
+                }
                 AzureIndexInput input = new AzureIndexInput(this, blob);
                 return input;
             }

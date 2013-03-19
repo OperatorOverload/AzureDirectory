@@ -58,8 +58,8 @@ namespace Lucene.Net.Store.Azure
 
                     long longLastModified = 0;
                     DateTime blobLastModifiedUTC = blob.Properties.LastModified.Value.UtcDateTime;
-                    if (long.TryParse(blob.Metadata["CachedLastModified"], out longLastModified))
-                        blobLastModifiedUTC = new DateTime(longLastModified).ToUniversalTime();
+                    //if (long.TryParse(blob.Metadata["CachedLastModified"], out longLastModified))
+                    //    blobLastModifiedUTC = new DateTime(longLastModified, DateTimeKind.Local).ToUniversalTime();
                     
                     if (cachedLength != blobLength)
                         fFileNeeded = true;
@@ -67,7 +67,13 @@ namespace Lucene.Net.Store.Azure
                     {
                         // there seems to be an error of 1 tick which happens every once in a while 
                         // for now we will say that if they are within 1 tick of each other and same length 
-                        DateTime cachedLastModifiedUTC = new DateTime(CacheDirectory.FileModified(fileName), DateTimeKind.Local).ToUniversalTime();
+                        DateTime cachedLastModifiedUTC = DateTime.MinValue;
+                        if (CacheDirectory is RAMDirectory) {
+                            cachedLastModifiedUTC = new DateTime(CacheDirectory.FileModified(fileName) * TimeSpan.TicksPerMillisecond, DateTimeKind.Local).ToUniversalTime();
+                        }
+                        else if (CacheDirectory is FSDirectory) {
+                            cachedLastModifiedUTC = new DateTime(CacheDirectory.FileModified(fileName) * TimeSpan.TicksPerMillisecond, DateTimeKind.Utc).ToUniversalTime().AddYears(1969);
+                        }
                         if (cachedLastModifiedUTC != blobLastModifiedUTC)
                         {
                             TimeSpan timeSpan = blobLastModifiedUTC.Subtract(cachedLastModifiedUTC);
