@@ -85,12 +85,12 @@ namespace Lucene.Net.Store.Azure
                             indexInput.ReadBytes(bytes, 0, (int)bytes.Length);
                             compressor.Write(bytes, 0, (int)bytes.Length);
                         }
-                        indexInput.Close();
+                        indexInput.Dispose();
 
                         // seek back to beginning of comrpessed stream
                         compressedStream.Seek(0, SeekOrigin.Begin);
 
-                        Debug.WriteLine(string.Format("COMPRESSED {0} -> {1} {2}% to {3}",
+                        Trace.TraceInformation(string.Format("COMPRESSED {0} -> {1} {2}% to {3}",
                            originalLength,
                            compressedStream.Length,
                            ((float)compressedStream.Length / (float)originalLength) * 100,
@@ -121,7 +121,7 @@ namespace Lucene.Net.Store.Azure
                     _blob.Metadata["CachedLastModified"] = CacheDirectory.FileModified(fileName).ToString();
                     _blob.SetMetadata();
 
-                    Debug.WriteLine(string.Format("PUT {1} bytes to {0} in cloud", _name, blobStream.Length));
+                    Trace.TraceInformation(string.Format("PUT {1} bytes to {0} in cloud", _name, blobStream.Length));
                 }
                 finally
                 {
@@ -129,7 +129,7 @@ namespace Lucene.Net.Store.Azure
                 }
 
 #if FULLDEBUG
-                Debug.WriteLine(string.Format("CLOSED WRITESTREAM {0}", _name));
+                Trace.TraceInformation(string.Format("CLOSED WRITESTREAM {0}", _name));
 #endif
                 // clean up
                 _indexOutput = null;

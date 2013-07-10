@@ -3,6 +3,7 @@ using System;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
+using System.Diagnostics;
 
 namespace Lucene.Net.Store.Azure
 {
@@ -34,6 +35,11 @@ namespace Lucene.Net.Store.Azure
                 m.SetAccessControl(security);
 
                 return Mutex.OpenExisting(mutexName);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.Message);
+                throw ex;
             }
         }
 

@@ -26,7 +26,7 @@ namespace TestApp
 
         static void Main(string[] args)
         {
-            
+            Console.WriteLine("Getting started...");
             // default AzureDirectory stores cache in local temp folder
             AzureDirectory azureDirectory = new AzureDirectory(CloudStorageAccount.DevelopmentStorageAccount, "TestCatalog6");
             bool findexExists = IndexReader.IndexExists(azureDirectory);
@@ -36,7 +36,7 @@ namespace TestApp
             {
                 try
                 {
-                    indexWriter = new IndexWriter(azureDirectory, new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_CURRENT), !IndexReader.IndexExists(azureDirectory), new Lucene.Net.Index.IndexWriter.MaxFieldLength(IndexWriter.DEFAULT_MAX_FIELD_LENGTH));
+                    indexWriter = new IndexWriter(azureDirectory, new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_30), !IndexReader.IndexExists(azureDirectory), new Lucene.Net.Index.IndexWriter.MaxFieldLength(IndexWriter.DEFAULT_MAX_FIELD_LENGTH));
                 }
                 catch (LockObtainFailedException)
                 {
@@ -46,12 +46,12 @@ namespace TestApp
                 }
             };
             Console.WriteLine("IndexWriter lock obtained, this process has exclusive write access to index");
-            indexWriter.SetRAMBufferSizeMB(10.0);
+            indexWriter.SetRAMBufferSizeMB(50.0);
             //indexWriter.SetUseCompoundFile(false);
             //indexWriter.SetMaxMergeDocs(10000);
             //indexWriter.SetMergeFactor(100);
             
-            for (int iDoc = 0; iDoc < 10000; iDoc++)
+            for (int iDoc = 0; iDoc < 100000; iDoc++)
             {
                 if (iDoc % 10 == 0)
                     Console.WriteLine(iDoc);
@@ -72,6 +72,9 @@ namespace TestApp
             SearchForPhrase(searcher, "dog");
             SearchForPhrase(searcher, _random.Next(32768).ToString());
             SearchForPhrase(searcher, _random.Next(32768).ToString());
+
+            Console.WriteLine();
+            Console.WriteLine("Finished.. Press Enter to exit");
             Console.Read();
         }
 
@@ -80,7 +83,7 @@ namespace TestApp
         {
             using (new AutoStopWatch(string.Format("Search for {0}", phrase)))
             {
-                Lucene.Net.QueryParsers.QueryParser parser = new Lucene.Net.QueryParsers.QueryParser(Lucene.Net.Util.Version.LUCENE_CURRENT, "Body", new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_CURRENT));
+                Lucene.Net.QueryParsers.QueryParser parser = new Lucene.Net.QueryParsers.QueryParser(Lucene.Net.Util.Version.LUCENE_30, "Body", new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_30));
                 Lucene.Net.Search.Query query = parser.Parse(phrase);
 
                 var hits = searcher.Search(query, 100);

@@ -33,7 +33,7 @@ namespace Lucene.Net.Store.Azure
             _name = blob.Uri.Segments[blob.Uri.Segments.Length - 1];
 
 #if FULLDEBUG
-            Debug.WriteLine(String.Format("opening {0} ", _name));
+            Trace.TraceInformation(String.Format("opening {0} ", _name));
 #endif
             _fileMutex = BlobMutexManager.GrabMutex(_name);
             _fileMutex.WaitOne();
@@ -82,7 +82,7 @@ namespace Lucene.Net.Store.Azure
                             else
                             {
 #if FULLDEBUG
-                                Debug.WriteLine(timeSpan.TotalSeconds);
+                                Trace.TraceInformation(timeSpan.TotalSeconds.ToString());
 #endif
                                 // file not needed
                             }
@@ -104,7 +104,7 @@ namespace Lucene.Net.Store.Azure
                         // get the deflated blob
                         _blob.DownloadToStream(deflatedStream);
 
-                        Debug.WriteLine(string.Format("GET {0} RETREIVED {1} bytes", _name, deflatedStream.Length));
+                        Trace.TraceInformation(string.Format("GET {0} RETREIVED {1} bytes", _name, deflatedStream.Length));
 
                         // seek back to begininng
                         deflatedStream.Seek(0, SeekOrigin.Begin);
@@ -137,7 +137,7 @@ namespace Lucene.Net.Store.Azure
                         _blob.DownloadToStream(fileStream);
 
                         fileStream.Flush();
-                        Debug.WriteLine(string.Format("GET {0} RETREIVED {1} bytes", _name, fileStream.Length));
+                        Trace.TraceInformation(string.Format("GET {0} RETREIVED {1} bytes", _name, fileStream.Length));
 
                         fileStream.Close();
                     }
@@ -148,7 +148,7 @@ namespace Lucene.Net.Store.Azure
                 else
                 {
 #if FULLDEBUG
-                    Debug.WriteLine(String.Format("Using cached file for {0}", _name));
+                    Trace.TraceInformation(String.Format("Using cached file for {0}", _name));
 #endif
 
                     // open the file in read only mode
@@ -169,7 +169,7 @@ namespace Lucene.Net.Store.Azure
             try
             {
 #if FULLDEBUG
-                Debug.WriteLine(String.Format("Creating clone for {0}", cloneInput._name));
+                Trace.TraceInformation(String.Format("Creating clone for {0}", cloneInput._name));
 #endif
                 _azureDirectory = cloneInput._azureDirectory;
                 _blobContainer = cloneInput._blobContainer;
@@ -180,7 +180,7 @@ namespace Lucene.Net.Store.Azure
             {
                 // sometimes we get access denied on the 2nd stream...but not always. I haven't tracked it down yet
                 // but this covers our tail until I do
-                Debug.WriteLine(String.Format("Dagnabbit, falling back to memory clone for {0}", cloneInput._name));
+                Trace.TraceInformation(String.Format("Dagnabbit, falling back to memory clone for {0}", cloneInput._name));
             }
             finally
             {
@@ -217,7 +217,7 @@ namespace Lucene.Net.Store.Azure
             try
             {
 #if FULLDEBUG
-                Debug.WriteLine(String.Format("CLOSED READSTREAM local {0}", _name));
+                Trace.TraceInformation(String.Format("CLOSED READSTREAM local {0}", _name));
 #endif
                 _indexInput.Dispose();
                 _indexInput = null;
@@ -248,7 +248,7 @@ namespace Lucene.Net.Store.Azure
             }
             catch (System.Exception err)
             {
-                Debug.WriteLine(err.ToString());
+                Trace.TraceError(err.ToString());
             }
             finally
             {

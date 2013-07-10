@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using System.IO;
 using Lucene.Net.Store;
 
@@ -42,7 +43,10 @@ namespace Lucene.Net.Store.Azure
                     count = (int)(len - pos);
                 Input.ReadBytes(buffer, offset, count);
             }
-            catch (Exception) { }
+            catch (Exception ex) 
+            {
+                Trace.TraceError(ex.ToString());
+            }
             return (int)(Input.FilePointer - pos);
         }
 
@@ -74,7 +78,7 @@ namespace Lucene.Net.Store.Azure
 
         public override void Close()
         {
-            Input.Close();
+            Input.Dispose();
             base.Close();
         }
     }

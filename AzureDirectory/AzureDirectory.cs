@@ -58,7 +58,10 @@ namespace Lucene.Net.Store.Azure
             Directory cacheDirectory)
         {
             if (storageAccount == null)
+            {
+                Trace.TraceError("storageAccount argument cannot be null");
                 throw new ArgumentNullException("storageAccount");
+            }
 
             if (string.IsNullOrEmpty(catalog))
                 _catalog = "lucene";
@@ -86,6 +89,8 @@ namespace Lucene.Net.Store.Azure
 #endif
         public void ClearCache()
         {
+            Trace.TraceInformation("Clearing cache");
+
             foreach (string file in _cacheDirectory.ListAll())
             {
                 _cacheDirectory.DeleteFile(file);
@@ -209,7 +214,7 @@ namespace Lucene.Net.Store.Azure
         {
             var blob = _blobContainer.GetBlockBlobReference(name);
             blob.DeleteIfExists();
-            Debug.WriteLine(String.Format("DELETE {0}/{1}", _blobContainer.Uri.ToString(), name));
+            Trace.TraceInformation(String.Format("DELETE {0}/{1}", _blobContainer.Uri.ToString(), name));
 
             if (_cacheDirectory.FileExists(name + ".blob"))
                 _cacheDirectory.DeleteFile(name + ".blob");
@@ -270,7 +275,7 @@ namespace Lucene.Net.Store.Azure
 
         private const string KeyPattern = @"blob_key_{0}";
 
-        /// <summary>Returns a stream reading an existing file. </summary>
+        /// <summary>Returns a stream reading an existing file.</summary>
         public override IndexInput OpenInput(System.String name) {
             var cache = MemoryCache.Default;
             try
@@ -291,7 +296,10 @@ namespace Lucene.Net.Store.Azure
             }
             catch (Exception err)
             {
-                throw new System.IO.FileNotFoundException(name, err);
+                var ex = new System.IO.FileNotFoundException(name, err);   
+                Trace.TraceError(ex.ToString());   
+                throw ex;  
+
             }
         }
 
